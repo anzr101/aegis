@@ -64,8 +64,9 @@ class SupervisorAgent(BaseAgent):
             "7. SUCCESS METRICS — How will the team know this campaign worked? "
             "Specific, measurable: 'reach 500k organic impressions in week 1' not "
             "'increase awareness'.\n\n"
-            "Be concise but rigorous. The executive_summary is what the human reads "
-            "first — make it count."
+            "Be concise but rigorous — keep the whole response under ~2500 tokens; "
+            "resolve conflicts in 2-3 sentences each, not essays. The "
+            "executive_summary is what the human reads first — make it count."
         )
 
     @property

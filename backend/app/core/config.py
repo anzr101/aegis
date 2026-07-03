@@ -35,13 +35,17 @@ class Settings(BaseSettings):
 
     # Limits
     max_tokens_per_agent: int = 4096
-    max_tokens_supervisor: int = 8192
+    # Sonnet 5's tokenizer runs ~30% more tokens than prior models; 8192 was
+    # observed truncating the supervisor's synthesis in live runs.
+    max_tokens_supervisor: int = 16000
     max_retries: int = 3
 
     # Trend agent live web search (Anthropic server-side tool).
     # Disable to run fully key-budget-free trend analysis from model knowledge.
+    # 3 searches is enough signal; each search adds thousands of input tokens
+    # (a 5-search run was measured at ~115k input tokens on the trend agent).
     enable_web_search: bool = True
-    max_web_searches: int = 5
+    max_web_searches: int = 3
 
     # Memory retrieval
     memory_top_k: int = 5

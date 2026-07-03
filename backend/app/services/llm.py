@@ -40,6 +40,11 @@ class LLMResult(BaseModel):
     model_used: str
 
 
+class LLMTruncationError(Exception):
+    """Response hit max_tokens — retrying the same call would truncate again,
+    so this deliberately bypasses the retry decorator and fails fast."""
+
+
 class LLMClient:
     """One async client per process."""
 
@@ -124,6 +129,12 @@ class LLMClient:
         start = time.perf_counter()
         response = await self._client.messages.create(**kwargs)
         latency_ms = int((time.perf_counter() - start) * 1000)
+
+        if response.stop_reason == "max_tokens":
+            raise LLMTruncationError(
+                f"{output_model.__name__} response truncated at {max_tokens} tokens "
+                f"on {model} — raise the agent's max_tokens"
+            )
 
         # Collect all text blocks (web_search responses contain several).
         text_parts = [

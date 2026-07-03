@@ -19,7 +19,9 @@ class ScoringAgent(BaseAgent):
     name = "scoring_agent"
     description = "Evaluation Engine"
     use_web_search = False
-    max_tokens = 4096
+    # Scores + self-critique for 3 concepts is long-form output; 4096 was
+    # observed to truncate mid-JSON (stop_reason=max_tokens) in live runs.
+    max_tokens = 8192
 
     @property
     def system_prompt(self) -> str:
