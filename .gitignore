@@ -1,0 +1,27 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+.pytest_cache/
+*.egg-info/
+
+# Env & secrets — never commit
+.env
+.env.local
+.env.production
+
+# Databases
+*.db
+*.sqlite3
+
+# Node / Next.js
+node_modules/
+.next/
+out/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
