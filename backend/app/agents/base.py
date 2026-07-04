@@ -66,7 +66,7 @@ class BaseAgent(ABC):
 
     async def emit(self, status: AgentStatus, thought: str | None = None,
                    tokens: int | None = None, latency: int | None = None,
-                   error: str | None = None) -> None:
+                   error: str | None = None, output: dict | None = None) -> None:
         await self.bus.publish(self.run_id, AgentEvent(
             agent_name=self.name,
             status=status,
@@ -74,6 +74,7 @@ class BaseAgent(ABC):
             tokens_used=tokens,
             latency_ms=latency,
             error=error,
+            output=output,
         ))
 
     async def run(self, brief: CampaignBrief, context: dict[str, Any]) -> AgentResult:
@@ -107,6 +108,7 @@ class BaseAgent(ABC):
                 thought=f"{self.description} — synthesis complete.",
                 tokens=result.tokens_used,
                 latency=result.latency_ms,
+                output=result.parsed.model_dump(mode="json"),
             )
             return AgentResult(
                 agent_name=self.name,

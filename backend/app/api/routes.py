@@ -13,6 +13,8 @@ import structlog
 from fastapi import APIRouter, HTTPException
 from sse_starlette.sse import EventSourceResponse
 
+from app.api.studio import router as studio_router
+from app.core.config import get_settings
 from app.db.store import get_store
 from app.schemas import CampaignBrief
 from app.services.event_bus import get_event_bus
@@ -20,6 +22,7 @@ from app.services.orchestrator import get_orchestrator
 
 log = structlog.get_logger()
 router = APIRouter()
+router.include_router(studio_router)  # /run, /runs — the 3D studio frontend
 
 # In-process job table. One process handles a whole run, so this is enough;
 # a job queue becomes necessary only with multiple API replicas.
@@ -28,7 +31,14 @@ _jobs: dict[str, asyncio.Task] = {}
 
 @router.get("/health")
 async def health():
-    return {"status": "ok", "service": "aegis"}
+    settings = get_settings()
+    live = bool(settings.anthropic_api_key)
+    return {
+        "status": "ok",
+        "service": "aegis",
+        "mode": "LIVE" if live else "DEMO",
+        "model": settings.operational_model if live else None,
+    }
 
 
 @router.post("/pipeline/run")

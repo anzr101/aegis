@@ -36,6 +36,9 @@ class AgentEvent(BaseModel):
     tokens_used: int | None = None
     latency_ms: int | None = None
     error: str | None = None
+    # Populated on COMPLETED: the agent's structured output as plain dict,
+    # so stream consumers can render it without a second fetch.
+    output: dict | None = None
 
 
 class PipelineRun(BaseModel):
