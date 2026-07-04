@@ -18,7 +18,9 @@ class TrendAgent(BaseAgent):
     name = "trend_agent"
     description = "Trend Intelligence"
     use_web_search = True
-    max_tokens = 4096
+    # Web-search-grounded output runs long; 4096 was observed truncating
+    # (stop_reason=max_tokens) in a live production run.
+    max_tokens = 8192
 
     @property
     def system_prompt(self) -> str:
