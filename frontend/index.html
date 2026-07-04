@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AEGIS · Campaign Intelligence · Ezor Media</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/styles.css" />
+
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+    }
+  }
+  </script>
+</head>
+<body data-stage="compose">
+  <div class="bg3d" aria-hidden="true"><canvas id="heroCanvas"></canvas></div>
+  <div class="bg-veil" aria-hidden="true"></div>
+  <div class="grain" aria-hidden="true"></div>
+  <div class="vignette" aria-hidden="true"></div>
+
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand__orb" aria-hidden="true"></span>
+      <span class="brand__mark">AEGIS</span>
+    </div>
+    <div class="topbar__right">
+      <span class="agency">for <strong>Ezor Media</strong></span>
+      <span id="modePill" class="pill pill--demo">DEMO</span>
+      <button id="historyBtn" class="ghostbtn" type="button">History</button>
+    </div>
+  </header>
+
+  <!-- COMPOSE STAGE -->
+  <main id="compose" class="stage stage--compose">
+    <section class="hero">
+      <div class="hero__scrim" aria-hidden="true"></div>
+      <div class="hero__copy">
+        <p class="eyebrow" data-animate>Campaign intelligence · Ezor Media</p>
+        <h1 class="hero__title" data-animate>
+          A campaign<br /><em>worth presenting.</em>
+        </h1>
+        <p class="hero__lede" data-animate>One brief in. A finished strategy out.</p>
+        <a class="cta cta--ghost" href="#brief" data-animate>
+          <span>Start a brief</span>
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M12 5v14M6 13l6 6 6-6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </a>
+      </div>
+    </section>
+
+    <section class="composer" id="brief" data-reveal>
+      <div class="composer__head">
+        <span class="composer__step">The brief</span>
+        <span class="composer__hint">Give what you have.</span>
+      </div>
+      <div class="form">
+        <label class="field field--wide">
+          <span>Brand</span>
+          <input id="f_brand" type="text" placeholder="e.g. Aurelia Skincare" />
+        </label>
+        <label class="field field--wide">
+          <span>Product or offering</span>
+          <input id="f_product" type="text" placeholder="e.g. a premium vitamin C serum launch" />
+        </label>
+        <label class="field field--wide">
+          <span>Primary goal</span>
+          <input id="f_goal" type="text" placeholder="e.g. drive 2,000 launch week orders" />
+        </label>
+        <label class="field">
+          <span>Target audience</span>
+          <input id="f_audience" type="text" placeholder="e.g. women 25 to 35, metro India" />
+        </label>
+        <label class="field">
+          <span>Market</span>
+          <input id="f_market" type="text" placeholder="e.g. India, metro and tier one" />
+        </label>
+        <label class="field">
+          <span>Budget</span>
+          <input id="f_budget" type="text" placeholder="e.g. ₹15,00,000" />
+        </label>
+        <label class="field">
+          <span>Timeline</span>
+          <input id="f_timeline" type="text" placeholder="e.g. a six week flight" />
+        </label>
+        <label class="field field--wide">
+          <span>Notes <i>(optional)</i></span>
+          <input id="f_notes" type="text" placeholder="anything else the agents should know" />
+        </label>
+      </div>
+      <div class="composer__actions">
+        <button id="sampleBtn" class="ghostbtn" type="button">Load sample brief</button>
+        <button id="runBtn" class="cta" type="button">
+          <span>Generate campaign</span>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+      </div>
+    </section>
+  </main>
+
+  <!-- RUN STAGE -->
+  <main id="run" class="stage stage--run" hidden>
+    <aside class="relay">
+      <div class="relay__head">
+        <span class="relay__label">Pipeline</span>
+        <button id="newRunBtn" class="ghostbtn ghostbtn--sm" type="button">New brief</button>
+      </div>
+      <ol id="relayList" class="relay__list"></ol>
+      <div class="relay__foot">
+        <div id="runStatus" class="runstatus">Standing by</div>
+      </div>
+    </aside>
+
+    <section class="document" id="documentWrap">
+      <div class="document__sheet" id="sheet">
+        <div class="doc__masthead">
+          <span class="doc__kicker">Campaign Brief · Ezor Media</span>
+          <h2 id="docBrand" class="doc__brand">—</h2>
+          <p id="docMeta" class="doc__meta"></p>
+        </div>
+        <div id="docBody" class="doc__body"></div>
+        <div id="docActions" class="doc__actions" hidden>
+          <button id="downloadBtn" class="cta cta--solid" type="button">Download brief (.md)</button>
+          <button id="copyBtn" class="ghostbtn" type="button">Copy as Markdown</button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- HISTORY DRAWER -->
+  <div id="historyDrawer" class="drawer" hidden>
+    <div class="drawer__panel">
+      <div class="drawer__head">
+        <h3>Run history</h3>
+        <button id="closeHistory" class="ghostbtn ghostbtn--sm" type="button">Close</button>
+      </div>
+      <ul id="historyList" class="history"></ul>
+    </div>
+    <div class="drawer__scrim" id="drawerScrim"></div>
+  </div>
+
+  <footer class="footer">
+    <span>AEGIS · built for Ezor Media</span>
+    <span id="footMode" class="footer__mode"></span>
+  </footer>
+
+  <script>window.AEGIS_API = "https://aegis-api-l89o.onrender.com";</script>
+  <script src="/app.js"></script>
+  <script type="module" src="/scene.js"></script>
+</body>
+</html>
