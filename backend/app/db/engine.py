@@ -16,7 +16,15 @@ _session_factory: async_sessionmaker[AsyncSession] | None = None
 def get_engine() -> AsyncEngine:
     global _engine
     if _engine is None:
-        _engine = create_async_engine(get_settings().database_url, echo=False)
+        # pre_ping + recycle: serverless Postgres (Neon) closes idle
+        # connections; without these the first query after an idle period
+        # dies with asyncpg InterfaceError on a stale pooled connection.
+        _engine = create_async_engine(
+            get_settings().database_url,
+            echo=False,
+            pool_pre_ping=True,
+            pool_recycle=300,
+        )
     return _engine
 
 

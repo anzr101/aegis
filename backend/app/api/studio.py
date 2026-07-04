@@ -86,17 +86,22 @@ async def run(brief: StudioBrief):
     bus = get_event_bus()
 
     async def stream():
-        # Subscribe BEFORE the pipeline starts so no event is missed.
-        subscription = bus.subscribe(run_id)
+        # Register the queue BEFORE the pipeline task exists — an async-
+        # generator subscription would only register on first iteration,
+        # losing every event the pipeline emits before then.
+        queue = await bus.open(run_id)
         yield _sse("run_started", {"run_id": run_id, "mode": _mode(), "agents": AGENTS_META})
 
         task = asyncio.create_task(get_orchestrator().execute(campaign, run_id))
         started: set[str] = set()
         try:
-            async for ev in subscription:
+            while True:
+                ev = await queue.get()
                 aid = ev.agent_name
                 if aid == "__pipeline__":
-                    continue  # terminal pipeline event ends the subscription loop
+                    if ev.status in (AgentStatus.COMPLETED, AgentStatus.FAILED):
+                        break
+                    continue
                 if ev.status == AgentStatus.RUNNING and aid not in started:
                     started.add(aid)
                     meta = next((a for a in AGENTS_META if a["id"] == aid), None)
@@ -108,6 +113,7 @@ async def run(brief: StudioBrief):
                     yield _sse("agent_error", {"id": aid, "error": ev.error or "failed"})
             yield _sse("run_complete", {"run_id": run_id})
         finally:
+            await bus.close(run_id, queue)
             if not task.done():
                 await task
 

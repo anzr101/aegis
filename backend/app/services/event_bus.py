@@ -30,11 +30,25 @@ class EventBus:
             except asyncio.QueueFull:
                 log.warning("event_bus_queue_full", run_id=run_id)
 
-    async def subscribe(self, run_id: str) -> AsyncIterator[AgentEvent]:
-        """Yield events for a run until the pipeline's terminal event arrives."""
+    async def open(self, run_id: str) -> asyncio.Queue:
+        """Register a subscriber queue NOW — before the pipeline task starts,
+        so no early event can be missed (an async-generator subscription only
+        registers on first iteration, which is too late)."""
         queue: asyncio.Queue = asyncio.Queue(maxsize=1000)
         async with self._lock:
             self._subscribers[run_id].append(queue)
+        return queue
+
+    async def close(self, run_id: str, queue: asyncio.Queue) -> None:
+        async with self._lock:
+            if queue in self._subscribers.get(run_id, []):
+                self._subscribers[run_id].remove(queue)
+            if run_id in self._subscribers and not self._subscribers[run_id]:
+                del self._subscribers[run_id]
+
+    async def subscribe(self, run_id: str) -> AsyncIterator[AgentEvent]:
+        """Yield events for a run until the pipeline's terminal event arrives."""
+        queue = await self.open(run_id)
         try:
             while True:
                 event = await queue.get()
@@ -45,11 +59,7 @@ class EventBus:
                 ):
                     break
         finally:
-            async with self._lock:
-                if queue in self._subscribers.get(run_id, []):
-                    self._subscribers[run_id].remove(queue)
-                if not self._subscribers[run_id]:
-                    del self._subscribers[run_id]
+            await self.close(run_id, queue)
 
 
 _bus: EventBus | None = None
