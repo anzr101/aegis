@@ -8,7 +8,7 @@ interface Props {
   name: string;
   displayName: string;
   status: AgentStatus;
-  thought: string | null;
+  lastThought: string | null;
   tokensUsed: number;
   latencyMs: number | null;
   error: string | null;
@@ -22,7 +22,7 @@ const COLOR_MAP = {
   warning: { dot: "bg-accent-warning", glow: "shadow-[0_0_20px_rgba(245,166,35,0.4)]", text: "text-accent-warning" },
 };
 
-export default function AgentCard({ name, displayName, status, thought, tokensUsed, latencyMs, error, accentColor = "blue" }: Props) {
+export default function AgentCard({ name, displayName, status, lastThought: thought, tokensUsed, latencyMs, error, accentColor = "blue" }: Props) {
   const c = COLOR_MAP[accentColor];
 
   const StatusIcon = () => {
