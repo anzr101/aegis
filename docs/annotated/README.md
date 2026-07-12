@@ -6,6 +6,14 @@ plus the infra/config files, annotated line-by-line, with architecture, a
 narrative explanation, and a function reference. The vanilla `frontend/`
 (`index.html`, `styles.css`, `app.js`, `scene.js`) is intentionally excluded.
 
+## Start here
+
+For a single, self-contained deep-dive that explains the whole backend — every
+file and function, the data flow, the SSE contract, the schema, and the design
+reasoning — read **[`../AEGIS_NOTEBOOKLM.md`](../AEGIS_NOTEBOOKLM.md)**. It reads
+top-to-bottom without opening the code and is ideal as one source for a
+notebook/knowledge tool. The files below then annotate each module in detail.
+
 ## How to read this
 
 Start at the top three overview docs, then dive into whichever annotated file
