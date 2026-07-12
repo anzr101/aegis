@@ -1,82 +1,119 @@
-# AEGIS — Autonomous Engagement & Generative Intelligence System
+# AEGIS — Campaign Intelligence for Ezor Media
 
-Turn a one-line marketing brief into a complete, evaluated campaign strategy —
-five specialized AI agents running as a coordinated pipeline, streamed live to
-the browser.
+A multi-agent platform that turns a single client brief into a complete,
+on-brand campaign strategy. Five specialised agents run as one pipeline —
+**Research → Competitor → Strategy → Creative → Media & Budget** — each one
+streaming live, each feeding its work to the next. The result is a finished,
+downloadable campaign brief your account team can present.
 
-## What it does
+Built for **Ezor Media**.
 
-Submit a brief (brand, industry, goal, audience). AEGIS runs:
+---
 
-```
- Trend Intelligence   Audience Psychology   Creative Strategy
- (live web search)                          (3 distinct concepts)
-        └────────── Stage 1: PARALLEL ──────────┘
-                          │
-                  Scoring / Evaluation      ← 8-dimension weighted rubric
-                          │                   + adversarial self-critique
-                  Supervisor Synthesis      ← conflict detection across agents,
-                                              concept selection, honest confidence
-```
+## Quick start (60 seconds, no API key needed)
 
-Every stage streams its status and "thoughts" to the UI over Server-Sent
-Events. Completed runs are persisted to PostgreSQL, and past high-scoring
-campaigns in the same industry are retrieved as context for new runs.
+The platform ships in **DEMO mode** — it runs the full pipeline and UI with
+realistic, brief-adaptive output so it works on a fresh machine with zero setup.
+Add an Anthropic key whenever you want real AI output (**LIVE mode**).
 
-## Architecture
-
-- **Backend** — FastAPI (async), clean layering:
-  `api/` routes → `services/` (orchestrator, event bus, LLM client) →
-  `agents/` (5 agents on a shared `BaseAgent`) → `db/` (SQLAlchemy 2.0 async).
-- **Agents** — each agent is a system prompt + a **strictly typed Pydantic
-  output schema**. The LLM client injects the JSON schema into the prompt,
-  validates the response, and retries on invalid output.
-- **Orchestration** — plain `asyncio.gather` for the independent agents;
-  no agent framework. Failures degrade gracefully: a failed agent becomes a
-  "FAILED OR UNAVAILABLE" section in the supervisor's input, not a crash.
-- **Models** — Claude Haiku 4.5 for the four operational agents (fast, cheap),
-  Claude Sonnet 5 for the supervisor (cross-agent synthesis). ~$0.05–0.10/run.
-- **Database** — PostgreSQL (JSONB for full run payloads, real columns for
-  query fields), SQLite fallback for zero-setup dev. Same code path via
-  SQLAlchemy async.
-- **Frontend** — Next.js 14 + Tailwind + Zustand; live pipeline graph fed by SSE.
-
-## Run locally
+### Option A — one command (macOS / Linux)
 
 ```bash
-# Backend (SQLite — no DB setup needed)
-cd backend
-python -m venv .venv && .venv\Scripts\activate     # Windows
-pip install -r requirements-dev.txt
-copy .env.example .env                              # add your ANTHROPIC_API_KEY
-uvicorn app.main:app --reload                       # http://localhost:8000/docs
-
-# Frontend
-cd ../frontend
-npm install && npm run dev                          # http://localhost:3000
+./run.sh
 ```
 
-With PostgreSQL: set `DATABASE_URL=postgresql+asyncpg://user:pass@localhost:5432/aegis`
-in `backend/.env` (tables are created on startup). Or `docker compose up`.
+### Option A — one command (Windows)
 
-## Tests
+```bat
+run.bat
+```
+
+### Option B — Docker
 
 ```bash
-cd backend
-pytest        # 27 tests, fully offline — stub LLM, isolated SQLite
+docker compose up
 ```
 
-The stub LLM returns valid instances of every agent's output schema, so the
-orchestrator, degradation paths, event bus, persistence, and API surface are
-all exercised end-to-end without an API key.
+Then open **http://localhost:8000**.
 
-## Design decisions (short version)
+> First run installs dependencies into a local `.venv` — give it a minute.
+> Every run after that is instant.
 
-- **No LangChain/LangGraph** — the pipeline is a fixed DAG; `asyncio.gather`
-  plus a typed base class is simpler, debuggable, and fully owned.
-- **Typed outputs everywhere** — Pydantic schemas as the contract between
-  agents prevents hallucinated structure; validation failure triggers a retry.
-- **Self-evaluation layer** — the Scoring agent's weighted rubric and
-  self-critique make quality measurable rather than vibes-based.
-- **In-memory event bus** — one run lives in one process; Redis pub/sub is the
-  documented seam if this ever scales to multiple replicas.
+---
+
+## Going LIVE (real AI output)
+
+1. Copy the env file (the run scripts do this for you):
+   ```bash
+   cp .env.example .env
+   ```
+2. Open `.env` and paste your key:
+   ```
+   ANTHROPIC_API_KEY=sk-ant-...
+   ```
+   Get one at https://console.anthropic.com.
+3. Restart. The mode pill in the top-right flips from **DEMO** to **LIVE**.
+
+That's the only difference — DEMO and LIVE run the exact same pipeline, UI,
+streaming, persistence and export.
+
+---
+
+## What's inside
+
+| Layer | Tech | Notes |
+|---|---|---|
+| Backend | FastAPI | One process serves API **and** frontend |
+| Orchestration | Async pipeline | 5 agents in sequence, context passed forward |
+| Streaming | Server-Sent Events | Per-agent token streaming drives the live relay |
+| AI | Anthropic Claude | `claude-sonnet-4-6`, with retries + graceful per-agent failure |
+| Persistence | SQLite | Every run saved; browsable history |
+| Frontend | Vanilla HTML/CSS/JS | No build step, no CDN dependency — self-contained |
+| Export | Markdown | Download or copy the finished brief |
+| Deploy | Docker / Compose | Single-command container |
+
+### Why no `npm install`?
+The frontend is intentionally build-free so the whole product runs from one
+Python process with one command and **cannot break on a fresh machine** over a
+node/npm mismatch. It still streams live over SSE and renders Markdown (tables
+included) with a self-contained renderer.
+
+---
+
+## Project layout
+
+```
+aegis-ezor/
+├── run.sh / run.bat          one-command setup + launch
+├── docker-compose.yml        one-command container
+├── requirements.txt
+├── .env.example
+├── backend/
+│   ├── main.py               FastAPI app, SSE endpoint, serves frontend
+│   ├── orchestrator.py       runs the 5 agents, emits SSE events
+│   ├── agents.py             agent roster + prompt builders
+│   ├── claude_client.py      Anthropic streaming + retries (LIVE only)
+│   ├── demo_data.py          brief-adaptive DEMO output (no key needed)
+│   ├── database.py           SQLite run history
+│   ├── export.py             assemble brief as Markdown
+│   └── config.py             DEMO/LIVE detection
+├── frontend/
+│   ├── index.html            single-page interface
+│   ├── styles.css            Ezor editorial aesthetic
+│   └── app.js                SSE client, relay, Markdown renderer
+└── data/                     SQLite db (created at runtime)
+```
+
+---
+
+## How to use it
+
+1. Open the app, fill in the brief (or hit **Load sample brief**).
+2. Press **Generate campaign**. Watch the gold relay charge as each agent
+   completes and its section streams into the brief.
+3. When the pipeline finishes, **Download brief (.md)** or **Copy as Markdown**.
+4. Revisit any past run from **History** (top-right).
+
+---
+
+*AEGIS · built for Ezor Media.*

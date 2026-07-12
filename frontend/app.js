@@ -5,8 +5,6 @@
 const $ = (sel) => document.querySelector(sel);
 const $$ = (sel) => Array.from(document.querySelectorAll(sel));
 
-const API = window.AEGIS_API || "";
-
 const state = {
   agents: [],
   outputs: {},
@@ -20,7 +18,7 @@ init();
 
 async function init() {
   try {
-    const res = await fetch(`${API}/api/health`);
+    const res = await fetch("/api/health");
     const h = await res.json();
     state.mode = h.mode;
     const pill = $("#modePill");
@@ -92,7 +90,7 @@ async function startRun() {
   setStatus("Connecting pipeline…");
 
   try {
-    const res = await fetch(`${API}/api/run`, {
+    const res = await fetch("/api/run", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(brief),
@@ -265,7 +263,7 @@ async function openHistory() {
   const list = $("#historyList");
   list.innerHTML = `<li class="history__empty">Loading…</li>`;
   try {
-    const res = await fetch(`${API}/api/runs`);
+    const res = await fetch("/api/runs");
     const runs = await res.json();
     if (!runs.length) {
       list.innerHTML = `<li class="history__empty">No runs yet. Generate your first campaign.</li>`;
@@ -293,7 +291,7 @@ function closeHistory() {
 
 async function loadRun(runId) {
   closeHistory();
-  const res = await fetch(`${API}/api/runs/${runId}`);
+  const res = await fetch(`/api/runs/${runId}`);
   const run = await res.json();
   state.runId = runId;
   state.brief = run.brief;
@@ -322,23 +320,23 @@ async function loadRun(runId) {
 
 function defaultAgents() {
   return [
-    { id: "trend_agent", name: "Trend Intelligence", role: "Live market & cultural signals", icon: "01" },
-    { id: "audience_agent", name: "Audience Psychology", role: "9-axis behavioral profile", icon: "02" },
-    { id: "creative_agent", name: "Creative Strategy", role: "3 distinct campaign concepts", icon: "03" },
-    { id: "scoring_agent", name: "Evaluation Engine", role: "8-dimension scoring & self-critique", icon: "04" },
-    { id: "supervisor", name: "Supervisor", role: "Conflict resolution & final brief", icon: "05" },
+    { id: "research", name: "Research", role: "Audience, market & cultural signals", icon: "01" },
+    { id: "competitor", name: "Competitor", role: "Positioning gaps & rival activity", icon: "02" },
+    { id: "strategy", name: "Strategy", role: "Campaign concept, pillars & KPIs", icon: "03" },
+    { id: "creative", name: "Creative", role: "Hooks, copy & content calendar", icon: "04" },
+    { id: "media", name: "Media & Budget", role: "Channel mix & spend allocation", icon: "05" },
   ];
 }
 
 /* ---------- Export ---------- */
 function downloadBrief() {
   if (!state.runId) return;
-  window.location.href = `${API}/api/runs/${state.runId}/export.md`;
+  window.location.href = `/api/runs/${state.runId}/export.md`;
 }
 
 async function copyBrief() {
   if (!state.runId) return;
-  const res = await fetch(`${API}/api/runs/${state.runId}/export.md`);
+  const res = await fetch(`/api/runs/${state.runId}/export.md`);
   const text = await res.text();
   try {
     await navigator.clipboard.writeText(text);

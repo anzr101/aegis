@@ -1,32 +1,12 @@
-# Local full-stack: Postgres + API. Frontend runs via `npm run dev` (or Vercel).
 services:
-  db:
-    image: postgres:16-alpine
-    environment:
-      POSTGRES_USER: aegis
-      POSTGRES_PASSWORD: aegis
-      POSTGRES_DB: aegis
-    ports:
-      - "5433:5432"
-    volumes:
-      - aegis_pgdata:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U aegis"]
-      interval: 5s
-      timeout: 3s
-      retries: 10
-
-  api:
-    build: ./backend
-    environment:
-      DATABASE_URL: postgresql+asyncpg://aegis:aegis@db:5432/aegis
-      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
-      CORS_ORIGINS: http://localhost:3000
+  aegis:
+    build: .
     ports:
       - "8000:8000"
-    depends_on:
-      db:
-        condition: service_healthy
-
-volumes:
-  aegis_pgdata:
+    environment:
+      # Optional — leave blank for DEMO mode, add key for LIVE AI.
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+      - AEGIS_MODEL=${AEGIS_MODEL:-claude-sonnet-4-6}
+    volumes:
+      - ./data:/app/data
+    restart: unless-stopped
