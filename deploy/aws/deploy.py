@@ -175,8 +175,10 @@ def upload_and_start(ip: str):
                     str(zip_path), str(env_local), f"ec2-user@{ip}:~/"], check=True)
     print("uploaded app + env")
 
+    # sudo on the rm: the ./data volume is created by Docker as root, so a
+    # plain rm can't clear it on a redeploy.
     ssh(ip, "sudo dnf install -y unzip >/dev/null 2>&1; "
-            "rm -rf ~/aegis && mkdir ~/aegis && "
+            "sudo rm -rf ~/aegis && mkdir ~/aegis && "
             "unzip -oq ~/aegis-app.zip -d ~/aegis && "
             "mv ~/prod.env ~/aegis/.env")
     r = ssh(ip, "cd ~/aegis && sudo docker compose -f docker-compose.prod.yml up -d --build",
